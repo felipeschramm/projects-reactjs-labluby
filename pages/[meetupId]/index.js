@@ -1,44 +1,71 @@
-import MeetupDetail from "../../components/meetups/MeetupDetail";
+import MeetupDetail from '../../components/meetups/MeetupDetail';
+import { MongoClient, ObjectId } from 'mongodb'
+import Head from 'next/head'
 
-function MeetupDetails() {
-    return <MeetupDetail title='Third Meetup'
-        image='https://cianorte.pr.gov.br/thumb/1600x1080/noticias/4141/Portal-Cianorte_800x533.jpg'
-        address='Some Street 5, Some City'
-        description='This is a first meetup'
-    />
+function MeetupDetails(props) {
+  return (
+    <>
+      <Head>
+        <title>{props.meetupData.title}</title>
+        <meta
+          name="description"
+          content={props.meetupData.description}        
+          />
+      </Head>
+      <MeetupDetail
+        image={props.meetupData.image}
+        title={props.meetupData.title}
+        address={props.meetupData.address}
+        description={props.meetupData.description}
+      />
+    </>
+  );
 }
 
 export async function getStaticPaths() {
-    return {
-        fallback: false,
-        paths: [
-            {
-                params: {
-                    meetupId: 'm1',
-                },
-            },
-            {
-                params: {
-                    meetupId: 'm2',
-                },
-            },
-        ],
-    };
+  const client = await MongoClient.connect(
+    'mongodb+srv://felipe:Cdkag7mxpJ5jjsu1@cluster0.28t8l.mongodb.net/meetups'
+  );
+  const db = client.db();
+
+  const meetupsCollection = db.collection('meetups');
+
+  const meetups = await meetupsCollection.find({}, { _id: 1 }).toArray();
+  client.close()
+
+  return {
+    fallback: false,
+    paths: meetups.map(meetup => ({
+      params: {
+        meetupId: meetup._id.toString()
+      }
+    }))
+  };
 }
 
 export async function getStaticProps(context) {
-    const meetupId = context.params.meetupId;
+  const meetupId = context.params.meetupId;
 
-    return {
-        props: {
-            meetupData: {
-                id: meetupId,
-                title: 'Third Meetup',
-                image: 'https://cianorte.pr.gov.br/thumb/1600x1080/noticias/4141/Portal-Cianorte_800x533.jpg',
-                address: 'Some address 3, some city',
-                description: 'This is a third meetup'
-            }
-        }
-    }
+  const client = await MongoClient.connect(
+    'mongodb+srv://felipe:Cdkag7mxpJ5jjsu1@cluster0.28t8l.mongodb.net/meetups'
+  );
+  const db = client.db();
+
+  const meetupsCollection = db.collection('meetups');
+
+  const selectedMeetup = await meetupsCollection.findOne({ _id: ObjectId(meetupId) })
+  client.close()
+  return {
+    props: {
+      meetupData: {
+        id: selectedMeetup._id.toString(),
+        title: selectedMeetup.title,
+        address: selectedMeetup.address,
+        description: selectedMeetup.description,
+        image: selectedMeetup.image
+      }
+    },
+  };
 }
+
 export default MeetupDetails;
