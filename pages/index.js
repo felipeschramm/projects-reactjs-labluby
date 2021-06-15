@@ -1,5 +1,4 @@
 import MeetupList from '../components/meetups/MeetupList'
-import Layout from '../components/layout/Layout'
 
 const DUMMY_MEETUPS = [
     {
@@ -25,10 +24,28 @@ const DUMMY_MEETUPS = [
     }
 ]
 
-function HomePage(){
-    return <Layout>
-    <MeetupList meetups={DUMMY_MEETUPS}/>
-    </Layout>
+function HomePage(props){
+   return <MeetupList meetups={props.meetups}/>
 }
+
+export function getStaticProps(){
+    return {
+        props:{
+            meetups:DUMMY_MEETUPS
+        },
+        revalidate:1
+        //numbers of seconds that the update of data will happen in server. 
+    }
+}
+
+// export async function getServerSideProps(context){
+//     const req = context.req;
+//     const res = context.res;
+//     return{
+//         props:{
+//             meetups:DUMMY_MEETUPS
+//         }
+//     }
+// }
 
 export default HomePage;
